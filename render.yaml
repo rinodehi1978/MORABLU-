@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: cs-dashboard
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        value: sqlite:////data/customer_support.db
+      - key: PYTHON_VERSION
+        value: "3.12"
+    disk:
+      name: cs-data
+      mountPath: /data
+      sizeGB: 1

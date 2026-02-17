@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ログイン - CS Dashboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .login-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.1);
+      padding: 40px;
+      width: 100%;
+      max-width: 400px;
+    }
+    .login-card h1 {
+      font-size: 22px;
+      color: #1a73e8;
+      margin-bottom: 4px;
+      text-align: center;
+    }
+    .login-card .subtitle {
+      font-size: 13px;
+      color: #80868b;
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #5f6368;
+      margin-bottom: 6px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 15px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    .form-group input:focus {
+      border-color: #1a73e8;
+    }
+    .btn-login {
+      width: 100%;
+      padding: 12px;
+      background: #1a73e8;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-login:hover { background: #1557b0; }
+    .btn-login:disabled { opacity: .5; cursor: not-allowed; }
+    .error-msg {
+      background: #fce8e6;
+      color: #d93025;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .error-msg.show { display: block; }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <h1>CS Dashboard</h1>
+    <div class="subtitle">カスタマーサポート ダッシュボード</div>
+    <div class="error-msg" id="error-msg"></div>
+    <form onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label>パスワード</label>
+        <input type="password" id="password" placeholder="パスワードを入力" autofocus required>
+      </div>
+      <button type="submit" class="btn-login" id="btn-login">ログイン</button>
+    </form>
+  </div>
+  <script>
+    async function handleLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-login');
+      const errEl = document.getElementById('error-msg');
+      const password = document.getElementById('password').value;
+
+      btn.disabled = true;
+      btn.textContent = 'ログイン中...';
+      errEl.classList.remove('show');
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password }),
+        });
+        if (res.ok) {
+          window.location.href = '/';
+        } else {
+          const data = await res.json();
+          errEl.textContent = data.detail || 'ログインに失敗しました';
+          errEl.classList.add('show');
+        }
+      } catch (err) {
+        errEl.textContent = '接続エラー: ' + err.message;
+        errEl.classList.add('show');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'ログイン';
+      }
+    }
+  </script>
+</body>
+</html>

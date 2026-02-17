@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>操作マニュアル - CS Dashboard</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    .manual-page {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 32px 24px 60px;
+    }
+    .manual-page h2 {
+      font-size: 22px;
+      margin-bottom: 8px;
+      color: var(--text);
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--primary);
+    }
+    .manual-page h3 {
+      font-size: 16px;
+      color: var(--primary);
+      margin: 24px 0 10px;
+    }
+    .manual-page p, .manual-page li {
+      font-size: 14px;
+      line-height: 1.8;
+      color: var(--text-secondary);
+    }
+    .manual-page ul, .manual-page ol {
+      padding-left: 24px;
+      margin-bottom: 16px;
+    }
+    .manual-page li { margin-bottom: 6px; }
+    .manual-section {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px 28px;
+      margin-bottom: 24px;
+    }
+    .step-flow {
+      display: flex;
+      gap: 0;
+      align-items: stretch;
+      flex-wrap: wrap;
+      margin: 16px 0;
+    }
+    .step-box {
+      flex: 1;
+      min-width: 140px;
+      background: #f8f9fa;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      text-align: center;
+      position: relative;
+    }
+    .step-box + .step-box { margin-left: 32px; }
+    .step-box + .step-box::before {
+      content: '\2192';
+      position: absolute;
+      left: -24px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 20px;
+      color: var(--primary);
+    }
+    .step-num {
+      display: inline-block;
+      width: 28px;
+      height: 28px;
+      line-height: 28px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .step-label { font-size: 13px; font-weight: 600; color: var(--text); }
+    .step-desc { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+    .badge-demo {
+      display: inline-block;
+      font-size: 12px;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-weight: 500;
+      vertical-align: middle;
+    }
+    .tip-box {
+      background: #e8f0fe;
+      border-left: 3px solid var(--primary);
+      padding: 12px 16px;
+      border-radius: 0 var(--radius) var(--radius) 0;
+      margin: 12px 0;
+      font-size: 13px;
+      color: var(--text);
+    }
+    .warn-box {
+      background: #fff8e1;
+      border-left: 3px solid var(--warning);
+      padding: 12px 16px;
+      border-radius: 0 var(--radius) var(--radius) 0;
+      margin: 12px 0;
+      font-size: 13px;
+      color: #b06000;
+    }
+    .shortcut-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin: 12px 0;
+    }
+    .shortcut-table th {
+      background: #f8f9fa;
+      padding: 8px 12px;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-secondary);
+      border-bottom: 2px solid var(--border);
+    }
+    .shortcut-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .toc {
+      background: #f8f9fa;
+      border-radius: var(--radius);
+      padding: 16px 24px;
+      margin-bottom: 24px;
+    }
+    .toc-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    .toc a {
+      font-size: 13px;
+      color: var(--primary);
+      text-decoration: none;
+      display: block;
+      padding: 3px 0;
+    }
+    .toc a:hover { text-decoration: underline; }
+    .important-notice {
+      background: linear-gradient(135deg, #d93025 0%, #c62828 100%);
+      color: #fff;
+      border-radius: 12px;
+      padding: 28px 32px;
+      margin-bottom: 28px;
+      box-shadow: 0 4px 16px rgba(217,48,37,.3);
+      position: relative;
+      overflow: hidden;
+    }
+    .important-notice::before {
+      content: '!';
+      position: absolute;
+      right: 24px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 120px;
+      font-weight: 900;
+      opacity: 0.12;
+      line-height: 1;
+    }
+    .important-notice h2 {
+      font-size: 20px;
+      color: #fff;
+      border-bottom: 2px solid rgba(255,255,255,.3);
+      padding-bottom: 10px;
+      margin-bottom: 14px;
+    }
+    .important-notice p {
+      font-size: 15px;
+      color: rgba(255,255,255,.95);
+      line-height: 1.9;
+      margin-bottom: 10px;
+    }
+    .important-notice strong {
+      color: #fff;
+      background: rgba(255,255,255,.15);
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+    .important-notice ul {
+      padding-left: 20px;
+      margin-top: 10px;
+    }
+    .important-notice li {
+      font-size: 14px;
+      color: rgba(255,255,255,.9);
+      line-height: 1.8;
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div style="display:flex;align-items:center;gap:24px;">
+      <h1><a href="/" style="color:#fff;text-decoration:none;">CS Dashboard</a></h1>
+      <nav class="header-nav">
+        <a href="/">メッセージ</a>
+        <a href="/templates">テンプレート管理</a>
+        <a href="/manual" class="active">マニュアル</a>
+      </nav>
+    </div>
+    <div class="stats">操作マニュアル</div>
+  </div>
+
+  <div class="manual-page">
+
+    <!-- 重要な注意事項 -->
+    <div class="important-notice">
+      <h2>必ずお読みください：カスタマー対応ルール</h2>
+      <p>
+        今後、お客様への返信は<strong>必ずこのダッシュボードから行ってください。</strong><br>
+        Seller Centralやメールソフトから直接返信しないでください。
+      </p>
+      <p>理由：</p>
+      <ul>
+        <li><strong>対応履歴の一元管理</strong> — ダッシュボード外で返信すると、誰がいつ何を返信したか記録が残りません。二重返信や対応漏れの原因になります。</li>
+        <li><strong>対応状況の共有</strong> — ダッシュボードで対応すれば、他のスタッフが「対応済み」か「未対応」かを一目で確認できます。</li>
+        <li><strong>品質の統一</strong> — テンプレートやAI回答を活用することで、スタッフごとの回答品質のバラつきを防ぎます。</li>
+        <li><strong>分析・改善</strong> — どのカテゴリの問い合わせが多いか、対応にどれくらい時間がかかっているかの分析に必要です。</li>
+      </ul>
+    </div>
+
+    <!-- 目次 -->
+    <div class="toc">
+      <div class="toc-title">目次</div>
+      <a href="#overview">1. このダッシュボードについて</a>
+      <a href="#flow">2. 基本の対応フロー</a>
+      <a href="#messages">3. メッセージ一覧の見方</a>
+      <a href="#reply-template">4. テンプレートで返信する</a>
+      <a href="#reply-ai">5. AI回答案で返信する</a>
+      <a href="#handled">6. 対応済みにする</a>
+      <a href="#thread">7. スレッド（やり取り履歴）</a>
+      <a href="#template-manage">8. テンプレート管理</a>
+      <a href="#status">9. ステータス一覧</a>
+      <a href="#faq">10. よくある質問</a>
+    </div>
+
+    <!-- 1. 概要 -->
+    <div class="manual-section" id="overview">
+      <h2>1. このダッシュボードについて</h2>
+      <p>
+        Amazon出品の3アカウント（MORABLU・2ndMORABLU・CHA3）に届くカスタマーメッセージを
+        一つの画面で確認・返信できるツールです。
+      </p>
+      <ul>
+        <li>メッセージは<strong>5分ごとに自動取込</strong>されます（手動取込も可能）</li>
+        <li>返信はこのダッシュボードから直接送信できます</li>
+        <li>よくある質問は<strong>テンプレート</strong>で即返信（AIコスト0円）</li>
+        <li>テンプレートに合わない場合は<strong>AI回答案</strong>を生成（1回 約$0.02）</li>
+      </ul>
+    </div>
+
+    <!-- 2. 基本フロー -->
+    <div class="manual-section" id="flow">
+      <h2>2. 基本の対応フロー</h2>
+      <div class="step-flow">
+        <div class="step-box">
+          <div class="step-num">1</div>
+          <div class="step-label">メッセージ選択</div>
+          <div class="step-desc">左パネルから新着を選ぶ</div>
+        </div>
+        <div class="step-box">
+          <div class="step-num">2</div>
+          <div class="step-label">カテゴリ選択</div>
+          <div class="step-desc">内容に合うカテゴリを選ぶ</div>
+        </div>
+        <div class="step-box">
+          <div class="step-num">3</div>
+          <div class="step-label">回答を作成</div>
+          <div class="step-desc">テンプレ or AI生成</div>
+        </div>
+        <div class="step-box">
+          <div class="step-num">4</div>
+          <div class="step-label">編集して送信</div>
+          <div class="step-desc">内容を確認して送信</div>
+        </div>
+      </div>
+      <div class="tip-box">
+        <strong>ポイント:</strong> テンプレートがある場合はテンプレートを使いましょう。AIを使わないのでコストがかからず、対応も速いです。
+      </div>
+    </div>
+
+    <!-- 3. メッセージ一覧 -->
+    <div class="manual-section" id="messages">
+      <h2>3. メッセージ一覧の見方</h2>
+      <p>画面左のパネルにメッセージ一覧が表示されます。</p>
+
+      <h3>フィルター機能</h3>
+      <table class="shortcut-table">
+        <tr><th>フィルター</th><th>説明</th></tr>
+        <tr><td>アカウント</td><td>MORABLU / 2ndMORABLU / CHA3 で絞り込み</td></tr>
+        <tr><td>ステータス</td><td>新着 / AI回答済 / 送信済 / 対応済 で絞り込み</td></tr>
+        <tr><td>検索</td><td>件名・本文・送信者名で自由検索</td></tr>
+      </table>
+
+      <h3>「メッセージ取込」ボタン</h3>
+      <p>
+        通常は5分ごとに自動で取り込まれますが、すぐに確認したい場合は
+        「メッセージ取込」ボタンを押すと手動で最新メッセージを取り込めます。
+      </p>
+
+      <h3>メッセージの色</h3>
+      <table class="shortcut-table">
+        <tr><th>左の色</th><th>意味</th></tr>
+        <tr>
+          <td><span class="badge-demo" style="background:#fce8e6;color:#d93025;">赤</span></td>
+          <td>新着 — まだ対応していないメッセージ</td>
+        </tr>
+        <tr>
+          <td><span class="badge-demo" style="background:#fef7e0;color:#b06000;">黄</span></td>
+          <td>AI回答済 — AI回答案が生成済み（まだ送信していない）</td>
+        </tr>
+        <tr>
+          <td><span class="badge-demo" style="background:#e6f4ea;color:#188038;">緑</span></td>
+          <td>送信済 — 返信を送信完了</td>
+        </tr>
+        <tr>
+          <td><span class="badge-demo" style="background:#e8eaed;color:#80868b;">灰</span></td>
+          <td>対応済 — Seller Central等で既に対応済み</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- 4. テンプレートで返信 -->
+    <div class="manual-section" id="reply-template">
+      <h2>4. テンプレートで返信する</h2>
+      <p>最も推奨する方法です。AIコスト0円で素早く対応できます。</p>
+      <ol>
+        <li>メッセージを選択すると、右パネルにお客様のメッセージが表示されます</li>
+        <li><strong>カテゴリボタン</strong>からメッセージの内容に合うものを選びます
+          <ul>
+            <li>発送・配送 / 商品不備 / 返品・交換 / 返金 / キャンセル / 仕様確認 / 領収書 / 届け先変更 / 配送日時指定 / 再送 / 欠品 / その他</li>
+          </ul>
+        </li>
+        <li>カテゴリに登録されたテンプレートが表示されるので、<strong>適切なテンプレートをクリック</strong></li>
+        <li>テンプレートの文面がエディタに展開されます</li>
+        <li><strong>内容を必要に応じて編集</strong>（お客様名の追加、注文番号の確認など）</li>
+        <li>「<strong>確認して送信</strong>」ボタンで送信</li>
+      </ol>
+      <div class="warn-box">
+        <strong>注意:</strong> テンプレートはそのまま送信するのではなく、必ずお客様の状況に合わせて文面を調整してください。
+      </div>
+    </div>
+
+    <!-- 5. AI回答案で返信 -->
+    <div class="manual-section" id="reply-ai">
+      <h2>5. AI回答案で返信する</h2>
+      <p>テンプレートに合うものがない場合に使います。</p>
+      <ol>
+        <li>カテゴリ選択の下にある「<strong>AI回答案を生成（~$0.02）</strong>」ボタンをクリック</li>
+        <li>AIが注文情報・商品情報を自動取得し、最適な回答案を生成します（10〜15秒）</li>
+        <li>生成された回答案がエディタに表示されます</li>
+        <li><strong>内容を必ず確認・編集</strong>してから「確認して送信」</li>
+      </ol>
+      <div class="warn-box">
+        <strong>重要:</strong> AI回答は必ず人間が確認してください。不確実な内容が含まれている場合は、
+        「担当部署に確認のうえ、改めてご連絡いたします」等の文言に修正してください。
+      </div>
+
+      <h3>AI回答の追加操作</h3>
+      <table class="shortcut-table">
+        <tr><th>操作</th><th>説明</th></tr>
+        <tr><td>カテゴリ修正</td><td>AIが提案したカテゴリが違う場合、プルダウンで変更できます</td></tr>
+        <tr><td>再生成</td><td>回答案に満足できない場合、もう一度生成（追加コスト発生）</td></tr>
+        <tr><td>下書き破棄</td><td>AI回答案を破棄して最初からやり直す</td></tr>
+      </table>
+    </div>
+
+    <!-- 6. 対応済み -->
+    <div class="manual-section" id="handled">
+      <h2>6. 対応済みにする</h2>
+      <p>
+        Seller Centralやメールで<strong>既に返信済みのメッセージ</strong>は、ダッシュボードから
+        二重に返信する必要はありません。
+      </p>
+      <ol>
+        <li>メッセージを選択</li>
+        <li>「<strong>対応済みにする</strong>」ボタンをクリック</li>
+        <li>メッセージがグレー表示になり、新着から消えます</li>
+      </ol>
+      <div class="tip-box">
+        間違えて対応済みにした場合は、メッセージを開いて「<strong>新着に戻す</strong>」で元に戻せます。
+      </div>
+    </div>
+
+    <!-- 7. スレッド -->
+    <div class="manual-section" id="thread">
+      <h2>7. スレッド（やり取り履歴）</h2>
+      <p>
+        同じ注文番号のメッセージは自動的にスレッド表示されます。
+        お客様とのやり取りの流れを時系列で確認できます。
+      </p>
+      <ul>
+        <li>お客様からの受信メッセージ</li>
+        <li>こちらからの送信済み回答</li>
+        <li>AI回答の元案（変更した場合は折りたたみで表示）</li>
+      </ul>
+    </div>
+
+    <!-- 8. テンプレート管理 -->
+    <div class="manual-section" id="template-manage">
+      <h2>8. テンプレート管理</h2>
+      <p>
+        上部メニューの「<strong>テンプレート管理</strong>」ページで、回答テンプレートの追加・編集・削除ができます。
+      </p>
+
+      <h3>テンプレートの作成</h3>
+      <ol>
+        <li>「+ 新規作成」ボタンをクリック</li>
+        <li>カテゴリを選択（メッセージ画面の12カテゴリと連動）</li>
+        <li>質問タイトル（例：「商品はいつ届きますか？」）</li>
+        <li>回答テンプレート（お客様に送る文面）</li>
+        <li>スタッフメモ（社内向け注意事項。お客様には見えません）</li>
+        <li>「保存」で登録完了</li>
+      </ol>
+
+      <div class="tip-box">
+        <strong>おすすめ:</strong> よく来る質問パターンを見つけたら、積極的にテンプレートを追加しましょう。
+        対応スピードが上がり、AIコストも削減できます。
+      </div>
+    </div>
+
+    <!-- 9. ステータス一覧 -->
+    <div class="manual-section" id="status">
+      <h2>9. ステータス一覧</h2>
+      <table class="shortcut-table">
+        <tr><th>ステータス</th><th>意味</th><th>次のアクション</th></tr>
+        <tr>
+          <td><span class="badge-demo" style="background:#fce8e6;color:#d93025;">新着</span></td>
+          <td>未対応のメッセージ</td>
+          <td>カテゴリ選択 → テンプレ or AI回答 → 送信</td>
+        </tr>
+        <tr>
+          <td><span class="badge-demo" style="background:#fef7e0;color:#b06000;">AI回答済</span></td>
+          <td>AIが回答案を生成済み</td>
+          <td>回答を確認・編集 → 送信</td>
+        </tr>
+        <tr>
+          <td><span class="badge-demo" style="background:#e6f4ea;color:#188038;">送信済</span></td>
+          <td>返信を送信完了</td>
+          <td>対応完了（お客様から再返信が来たら新着になります）</td>
+        </tr>
+        <tr>
+          <td><span class="badge-demo" style="background:#e8eaed;color:#80868b;">対応済</span></td>
+          <td>Seller Central等で対応済み</td>
+          <td>対応完了</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- 10. FAQ -->
+    <div class="manual-section" id="faq">
+      <h2>10. よくある質問</h2>
+
+      <h3>Q. メッセージが表示されません</h3>
+      <p>
+        「メッセージ取込」ボタンを押してみてください。
+        それでも表示されない場合は、フィルター（アカウント・ステータス）がかかっていないか確認してください。
+      </p>
+
+      <h3>Q. テンプレートが見つかりません</h3>
+      <p>
+        カテゴリが合っているか確認してください。「その他」を選ぶと全カテゴリが対象になります。
+        該当テンプレートが無い場合は、AI回答案を使ってください。
+      </p>
+
+      <h3>Q. AI回答案の内容が不正確です</h3>
+      <p>
+        AIの回答は必ず確認してから送信してください。不確実な場合は、文面を
+        「確認のうえ改めてご連絡いたします」等に修正してください。
+        回答案の精度に問題がある場合は管理者に報告してください。
+      </p>
+
+      <h3>Q. 送信ボタンを押したのにエラーが出ます</h3>
+      <p>
+        ネットワーク接続を確認してください。エラーが続く場合は管理者に連絡してください。
+      </p>
+
+      <h3>Q. 間違って送信してしまいました</h3>
+      <p>
+        送信済みのメッセージは取り消しできません。Seller Centralからフォローアップの返信を送ってください。
+      </p>
+    </div>
+
+  </div>
+</body>
+</html>

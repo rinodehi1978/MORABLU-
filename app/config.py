@@ -31,6 +31,10 @@ class Settings(BaseSettings):
 
     fetch_interval_minutes: int = 5
 
+    # Dashboard authentication
+    dashboard_password: str = "changeme"
+    session_secret: str = "auto-generated-secret-change-in-production"
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
 
