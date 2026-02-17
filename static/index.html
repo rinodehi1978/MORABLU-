@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>カスタマーサポート ダッシュボード</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div class="header">
+    <div style="display:flex;align-items:center;gap:24px;">
+      <h1>CS Dashboard</h1>
+      <nav class="header-nav">
+        <a href="/" class="active">メッセージ</a>
+        <a href="/templates">テンプレート管理</a>
+      </nav>
+    </div>
+    <div class="stats">読み込み中...</div>
+  </div>
+
+  <div class="layout">
+    <!-- Sidebar: Message List -->
+    <div class="sidebar">
+      <div class="filters">
+        <div class="filter-row">
+          <select id="filter-account"></select>
+          <select id="filter-status">
+            <option value="">全ステータス</option>
+            <option value="new">新着</option>
+            <option value="ai_drafted">AI回答済</option>
+            <option value="sent">送信済</option>
+            <option value="handled">対応済</option>
+          </select>
+        </div>
+        <input type="text" id="filter-search" placeholder="メッセージを検索...">
+        <button class="btn btn-primary btn-sm" id="btn-fetch" onclick="handleFetchMessages()" style="width:100%;">メッセージ取込</button>
+      </div>
+      <div class="message-list"></div>
+    </div>
+
+    <!-- Main: Detail -->
+    <div class="main-panel">
+      <div class="detail-empty">左のメッセージを選択してください</div>
+    </div>
+  </div>
+
+  <div class="toast-container"></div>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

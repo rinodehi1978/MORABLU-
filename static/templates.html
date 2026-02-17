@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>テンプレート管理 - CS Dashboard</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div class="header">
+    <div style="display:flex;align-items:center;gap:24px;">
+      <h1><a href="/" style="color:#fff;text-decoration:none;">CS Dashboard</a></h1>
+      <nav class="header-nav">
+        <a href="/">メッセージ</a>
+        <a href="/templates" class="active">テンプレート管理</a>
+      </nav>
+    </div>
+    <div class="stats" id="stats">-</div>
+  </div>
+
+  <div class="template-page">
+    <!-- Toolbar -->
+    <div class="template-toolbar">
+      <div class="template-filters">
+        <input type="text" id="filter-search" placeholder="テンプレートを検索...">
+        <select id="filter-platform">
+          <option value="">全販路</option>
+          <option value="common">共通</option>
+          <option value="amazon">Amazon</option>
+          <option value="yahoo_auction">ヤフオク</option>
+          <option value="yahoo_shopping">Yahoo!ショッピング</option>
+          <option value="mercari">メルカリ</option>
+          <option value="rakuten">楽天</option>
+          <option value="multi_channel">マルチチャネル</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="openModal()">+ 新規作成</button>
+    </div>
+
+    <!-- Template Table -->
+    <div class="template-table-wrap">
+      <table class="template-table" id="template-table">
+        <thead>
+          <tr>
+            <th style="width:10%">カテゴリ</th>
+            <th style="width:20%">質問タイトル</th>
+            <th style="width:12%">サブカテゴリ</th>
+            <th style="width:7%">販路</th>
+            <th style="width:30%">回答テンプレート</th>
+            <th style="width:10%">メモ</th>
+            <th style="width:7%">操作</th>
+          </tr>
+        </thead>
+        <tbody id="template-body">
+          <tr><td colspan="6" style="text-align:center;padding:40px;color:#80868b;">読み込み中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modal-overlay" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 id="modal-title">テンプレート新規作成</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-id">
+        <div class="form-group">
+          <label>カテゴリ <span class="required">*</span></label>
+          <select id="edit-category-key">
+            <option value="">-- 選択してください --</option>
+            <option value="shipping">発送・配送</option>
+            <option value="defect">商品不備</option>
+            <option value="return">返品・交換</option>
+            <option value="refund">返金</option>
+            <option value="cancel">キャンセル</option>
+            <option value="spec">仕様確認</option>
+            <option value="receipt">領収書</option>
+            <option value="address">届け先変更</option>
+            <option value="delivery_time">配送日時指定</option>
+            <option value="resend">再送</option>
+            <option value="stock">欠品</option>
+            <option value="other">その他</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>質問タイトル <span class="required">*</span></label>
+          <input type="text" id="edit-category" placeholder="例: 商品の発送、配送はいつになりますか？">
+        </div>
+        <div class="form-group">
+          <label>サブカテゴリ</label>
+          <input type="text" id="edit-subcategory" placeholder="例: 繁忙期の場合">
+        </div>
+        <div class="form-group">
+          <label>販路</label>
+          <select id="edit-platform">
+            <option value="common">共通</option>
+            <option value="amazon">Amazon</option>
+            <option value="yahoo_auction">ヤフオク</option>
+            <option value="yahoo_shopping">Yahoo!ショッピング</option>
+            <option value="mercari">メルカリ</option>
+            <option value="rakuten">楽天</option>
+            <option value="multi_channel">マルチチャネル</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>回答テンプレート <span class="required">*</span></label>
+          <textarea id="edit-template" rows="8" placeholder="お客様への回答テンプレートを入力..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>スタッフメモ</label>
+          <textarea id="edit-notes" rows="3" placeholder="スタッフ向けの注意事項やメモ（お客様には表示されません）"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal()">キャンセル</button>
+        <button class="btn btn-primary" id="btn-save" onclick="saveTemplate()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container"></div>
+  <script src="/static/js/templates.js"></script>
+</body>
+</html>
