@@ -77,24 +77,27 @@ static_dir.mkdir(exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 
+_NO_CACHE = {"Cache-Control": "no-cache, no-store, must-revalidate"}
+
+
 @app.get("/login")
 async def login_page():
-    return FileResponse(str(static_dir / "login.html"))
+    return FileResponse(str(static_dir / "login.html"), headers=_NO_CACHE)
 
 
 @app.get("/")
 async def root():
-    return FileResponse(str(static_dir / "index.html"))
+    return FileResponse(str(static_dir / "index.html"), headers=_NO_CACHE)
 
 
 @app.get("/templates")
 async def templates_page():
-    return FileResponse(str(static_dir / "templates.html"))
+    return FileResponse(str(static_dir / "templates.html"), headers=_NO_CACHE)
 
 
 @app.get("/manual")
 async def manual_page():
-    return FileResponse(str(static_dir / "manual.html"))
+    return FileResponse(str(static_dir / "manual.html"), headers=_NO_CACHE)
 
 
 @app.exception_handler(Exception)

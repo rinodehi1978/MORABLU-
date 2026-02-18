@@ -24,6 +24,9 @@ def list_messages(
 ):
     query = db.query(Message).options(joinedload(Message.account))
 
+    # リスト表示は受信メッセージのみ（送信済み返信はスレッド詳細で表示）
+    query = query.filter(Message.direction == "inbound")
+
     if account_id:
         query = query.filter(Message.account_id == account_id)
     if channel:
@@ -40,19 +43,35 @@ def list_messages(
             )
         )
 
-    messages = (
+    all_messages = (
         query.order_by(Message.received_at.desc())
-        .offset(skip)
-        .limit(limit)
         .all()
     )
 
+    # スレッドをグループ化: 同一送信者＋同一アカウントを1つのスレッドにまとめる
+    # （注文番号の有無に関わらず、同じお客様からの問い合わせは1スレッド）
+    threads: dict[str, list] = {}
+    thread_order: list[str] = []
+    for msg in all_messages:
+        key = f"{msg.account_id}_{msg.sender}"
+        if key not in threads:
+            threads[key] = []
+            thread_order.append(key)
+        threads[key].append(msg)
+
     result = []
-    for msg in messages:
-        data = MessageRead.model_validate(msg)
-        data.account_name = msg.account.name if msg.account else None
+    for key in thread_order:
+        thread_msgs = threads[key]
+        # 代表メッセージ: 新着があればその最新、なければスレッド全体の最新
+        new_msgs = [m for m in thread_msgs if m.status == "new"]
+        representative = new_msgs[0] if new_msgs else thread_msgs[0]
+
+        data = MessageRead.model_validate(representative)
+        data.account_name = representative.account.name if representative.account else None
+        data.thread_count = len(thread_msgs)
         result.append(data)
-    return result
+
+    return result[skip:skip + limit]
 
 
 @router.post("/fetch")
@@ -117,10 +136,9 @@ def bulk_mark_handled(message_ids: list[int], db: Session = Depends(get_db)):
 
 @router.get("/{message_id}/thread")
 def get_thread(message_id: int, db: Session = Depends(get_db)):
-    """注文番号ベースの会話スレッドを取得する
+    """同一送信者＋同一アカウントの会話スレッドを取得する
 
-    同じ注文番号を持つ全メッセージ + 各メッセージの回答履歴を時系列で返す。
-    注文番号がない場合は、指定メッセージ単体 + 回答を返す。
+    同じ送信者・同じアカウントの全受信メッセージ + 各メッセージの回答履歴を時系列で返す。
     """
     msg = (
         db.query(Message)
@@ -131,17 +149,18 @@ def get_thread(message_id: int, db: Session = Depends(get_db)):
     if not msg:
         raise HTTPException(status_code=404, detail="Message not found")
 
-    # 同じ注文番号の全メッセージを取得（時系列順）
-    if msg.external_order_id:
-        thread_messages = (
-            db.query(Message)
-            .options(joinedload(Message.account))
-            .filter(Message.external_order_id == msg.external_order_id)
-            .order_by(Message.received_at.asc())
-            .all()
+    # 同一送信者＋同一アカウントの受信メッセージを全て取得（時系列順）
+    thread_messages = (
+        db.query(Message)
+        .options(joinedload(Message.account))
+        .filter(
+            Message.sender == msg.sender,
+            Message.account_id == msg.account_id,
+            Message.direction == "inbound",
         )
-    else:
-        thread_messages = [msg]
+        .order_by(Message.received_at.asc())
+        .all()
+    )
 
     # 各メッセージの回答履歴を取得
     thread = []
@@ -182,7 +201,13 @@ def get_thread(message_id: int, db: Session = Depends(get_db)):
             ],
         })
 
+    # スレッド内の注文番号を集約（複数あり得る）
+    order_ids = list(dict.fromkeys(
+        m.external_order_id for m in thread_messages if m.external_order_id
+    ))
+
     return {
-        "order_id": msg.external_order_id,
+        "order_id": order_ids[0] if len(order_ids) == 1 else None,
+        "order_ids": order_ids,
         "thread": thread,
     }

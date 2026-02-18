@@ -27,6 +27,7 @@ class MessageRead(MessageBase):
     id: int
     created_at: datetime
     account_name: str | None = None
+    thread_count: int = 1
 
     model_config = {"from_attributes": True}
 

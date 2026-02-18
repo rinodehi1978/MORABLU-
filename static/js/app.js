@@ -112,6 +112,7 @@ function renderMessageList() {
       <div class="msg-meta">
         <span class="badge badge-account">${esc(m.account_name || '')}</span>
         <span class="badge badge-status-${m.status}">${statusLabel(m.status)}</span>
+        ${m.thread_count > 1 ? `<span class="badge badge-thread">${m.thread_count}件のやり取り</span>` : ''}
         ${m.question_category ? `<span class="badge badge-category">${CATEGORY_LABELS[m.question_category] || m.question_category}</span>` : ''}
       </div>
     </div>
@@ -247,12 +248,18 @@ function renderThread(data, currentMsg) {
         // カテゴリ選択UIを即表示（API呼び出し不要）
         setTimeout(() => showCategoryPicker(m), 0);
       } else {
-        // 送信済みのみ
+        // 送信済みのみ → 追加返信が可能
         html += `<div class="section" id="action-section">
-          <button class="btn btn-outline btn-sm" onclick="handleRegenerate()">
-            新しいAI回答案を生成（APIコスト発生）
-          </button>
-        </div>`;
+          <div style="text-align:center;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+            <button class="btn btn-secondary" onclick="handleFreeText()">
+              自分で書く
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="handleRegenerate()">
+              新しいAI回答案を生成（APIコスト発生）
+            </button>
+          </div>
+        </div>
+        <div id="editor-area" style="display:none;"></div>`;
       }
     }
   });
@@ -288,6 +295,9 @@ function showCategoryPicker(msg) {
       </div>
       <div class="action-divider">または</div>
       <div style="text-align:center;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <button class="btn btn-secondary" onclick="handleFreeText()">
+          自分で書く
+        </button>
         <button class="btn btn-primary" onclick="handleGenerate()" id="btn-ai-generate">
           AI回答案を生成（~$0.02）
         </button>
@@ -429,6 +439,27 @@ function selectTemplate(idx) {
 }
 
 // --- Handlers ---
+function handleFreeText() {
+  const editorArea = $('#editor-area');
+  if (!editorArea) return;
+
+  editorArea.style.display = 'block';
+  editorArea.innerHTML = `
+    <div style="margin-top:20px;">
+      <div class="section-title">メッセージを作成して送信</div>
+      <textarea class="response-editor" id="response-text" placeholder="ここにメッセージを入力..."></textarea>
+      <div class="action-bar">
+        <button class="btn btn-success" id="btn-send" onclick="handleSendDirect()">
+          確認して送信
+        </button>
+      </div>
+    </div>
+  `;
+
+  editorArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  $('#response-text').focus();
+}
+
 async function handleGenerate() {
   const msg = messages.find(m => m.id === selectedMessageId);
   if (!msg) return;

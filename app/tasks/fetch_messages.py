@@ -13,7 +13,7 @@ from app.services.gmail_fetcher import fetch_all_accounts
 
 logger = logging.getLogger(__name__)
 
-scheduler = BackgroundScheduler()
+scheduler = BackgroundScheduler(daemon=True)
 
 
 def _fetch_job():
