@@ -95,6 +95,11 @@ async def templates_page():
     return FileResponse(str(static_dir / "templates.html"), headers=_NO_CACHE)
 
 
+@app.get("/usage")
+async def usage_page():
+    return FileResponse(str(static_dir / "usage.html"), headers=_NO_CACHE)
+
+
 @app.get("/manual")
 async def manual_page():
     return FileResponse(str(static_dir / "manual.html"), headers=_NO_CACHE)
@@ -110,9 +115,31 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
+def _migrate_db():
+    """既存テーブルに新カラムを追加する（SQLite ALTER TABLE）"""
+    from sqlalchemy import inspect, text
+
+    inspector = inspect(engine)
+    if "ai_responses" in inspector.get_table_names():
+        existing = {c["name"] for c in inspector.get_columns("ai_responses")}
+        migrations = {
+            "input_tokens": "INTEGER",
+            "output_tokens": "INTEGER",
+            "model_used": "VARCHAR(100)",
+        }
+        with engine.begin() as conn:
+            for col, dtype in migrations.items():
+                if col not in existing:
+                    conn.execute(text(
+                        f"ALTER TABLE ai_responses ADD COLUMN {col} {dtype}"
+                    ))
+                    logger.info("Added column ai_responses.%s", col)
+
+
 @app.on_event("startup")
 async def startup():
     Base.metadata.create_all(bind=engine)
+    _migrate_db()
     start_scheduler()
 
 

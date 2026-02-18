@@ -129,13 +129,19 @@ async def generate_draft(
     user_content += "\n\n上記を踏まえて、お客様への回答案を作成してください。"
 
     try:
+        model = "claude-sonnet-4-5-20250929"
         response = client.messages.create(
-            model="claude-sonnet-4-5-20250929",
+            model=model,
             max_tokens=1024,
             system=SYSTEM_PROMPT,
             messages=[{"role": "user", "content": user_content}],
         )
-        return response.content[0].text
+        return {
+            "text": response.content[0].text,
+            "input_tokens": response.usage.input_tokens,
+            "output_tokens": response.usage.output_tokens,
+            "model": model,
+        }
     except Exception:
         logger.exception("AI response generation failed")
         raise

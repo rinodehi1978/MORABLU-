@@ -1,8 +1,8 @@
 import logging
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import or_
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import extract, func, or_
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -274,7 +274,7 @@ async def generate_response(
         )
 
         # --- Step 7: AI回答案生成 ---
-        draft = await generate_draft(
+        result = await generate_draft(
             customer_message=message.body,
             subject=message.subject,
             order_id=message.external_order_id,
@@ -299,8 +299,11 @@ async def generate_response(
 
     ai_response = AiResponse(
         message_id=message.id,
-        draft_body=draft,
+        draft_body=result["text"],
         ai_suggested_category=staff_category,
+        input_tokens=result.get("input_tokens"),
+        output_tokens=result.get("output_tokens"),
+        model_used=result.get("model"),
     )
     db.add(ai_response)
     message.status = "ai_drafted"
@@ -438,3 +441,75 @@ async def send_direct(
     db.commit()
     db.refresh(ai_response)
     return ai_response
+
+
+# Claude Sonnet 4.5 料金（USD per token）
+_INPUT_PRICE_PER_TOKEN = 3.00 / 1_000_000
+_OUTPUT_PRICE_PER_TOKEN = 15.00 / 1_000_000
+
+
+@router.get("/usage")
+def get_ai_usage(
+    year: int = Query(...),
+    month: int = Query(...),
+    db: Session = Depends(get_db),
+):
+    """月次AI利用統計をアカウント別に集計する
+
+    Returns:
+        accounts: アカウント別の利用回数・トークン数・推定コスト
+        total: 全アカウント合計
+    """
+    # AiResponse + Message + Account を結合して集計
+    rows = (
+        db.query(
+            Account.name.label("account_name"),
+            func.count(AiResponse.id).label("count"),
+            func.coalesce(func.sum(AiResponse.input_tokens), 0).label("input_tokens"),
+            func.coalesce(func.sum(AiResponse.output_tokens), 0).label("output_tokens"),
+        )
+        .join(Message, AiResponse.message_id == Message.id)
+        .join(Account, Message.account_id == Account.id)
+        .filter(
+            extract("year", AiResponse.created_at) == year,
+            extract("month", AiResponse.created_at) == month,
+            AiResponse.input_tokens.isnot(None),
+        )
+        .group_by(Account.name)
+        .all()
+    )
+
+    accounts = []
+    total_count = 0
+    total_input = 0
+    total_output = 0
+    total_cost = 0.0
+
+    for row in rows:
+        cost_usd = (
+            row.input_tokens * _INPUT_PRICE_PER_TOKEN
+            + row.output_tokens * _OUTPUT_PRICE_PER_TOKEN
+        )
+        accounts.append({
+            "account_name": row.account_name,
+            "count": row.count,
+            "input_tokens": row.input_tokens,
+            "output_tokens": row.output_tokens,
+            "cost_usd": round(cost_usd, 4),
+        })
+        total_count += row.count
+        total_input += row.input_tokens
+        total_output += row.output_tokens
+        total_cost += cost_usd
+
+    return {
+        "year": year,
+        "month": month,
+        "accounts": accounts,
+        "total": {
+            "count": total_count,
+            "input_tokens": total_input,
+            "output_tokens": total_output,
+            "cost_usd": round(total_cost, 4),
+        },
+    }

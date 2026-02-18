@@ -102,13 +102,33 @@ def get_message(message_id: int, db: Session = Depends(get_db)):
 
 @router.put("/{message_id}/handled")
 def mark_handled(message_id: int, db: Session = Depends(get_db)):
-    """メッセージを「対応済み」にマークする（既にSeller Central等で対応済みの場合）"""
+    """メッセージを「対応済み」にマークする（既にSeller Central等で対応済みの場合）
+
+    同じスレッド（同一送信者+同一アカウント）の全「新着」メッセージも一括で対応済みにする。
+    これにより、リロード時にスレッドが「新着」に戻るバグを防止する。
+    """
     msg = db.query(Message).filter(Message.id == message_id).first()
     if not msg:
         raise HTTPException(status_code=404, detail="Message not found")
-    msg.status = "handled"
+
+    # 同スレッド内の全「new」メッセージを一括で handled にする
+    updated = (
+        db.query(Message)
+        .filter(
+            Message.sender == msg.sender,
+            Message.account_id == msg.account_id,
+            Message.direction == "inbound",
+            Message.status == "new",
+        )
+        .update({"status": "handled"}, synchronize_session="fetch")
+    )
+
+    # 指定メッセージ自体も確実に handled にする（newでなかった場合も）
+    if msg.status != "handled":
+        msg.status = "handled"
+
     db.commit()
-    return {"detail": "対応済みにしました", "id": msg.id, "status": msg.status}
+    return {"detail": f"対応済みにしました（{updated}件）", "id": msg.id, "status": msg.status}
 
 
 @router.put("/{message_id}/reopen")

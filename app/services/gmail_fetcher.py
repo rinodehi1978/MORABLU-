@@ -183,6 +183,29 @@ def _process_emails(
                 )
                 if exists:
                     continue
+            else:
+                # Message-IDが空の場合: 送信者+件名+日付で重複チェック
+                date_str = msg.get("Date", "")
+                try:
+                    msg_date = parsedate_to_datetime(date_str)
+                except Exception:
+                    msg_date = None
+                from_raw = _decode_header(msg.get("From", ""))
+                subj_raw = _decode_header(msg.get("Subject", ""))
+                dup_query = db.query(Message).filter(
+                    Message.account_id == account.id,
+                    Message.external_message_id.is_(None),
+                )
+                if msg_date:
+                    dup_query = dup_query.filter(
+                        Message.received_at == msg_date,
+                    )
+                if subj_raw:
+                    dup_query = dup_query.filter(
+                        Message.subject == subj_raw,
+                    )
+                if dup_query.first():
+                    continue
 
             if direction == "inbound":
                 parsed = _parse_amazon_email(msg)

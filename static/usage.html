@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI利用コスト - CS Dashboard</title>
+  <link rel="stylesheet" href="/static/css/style.css?v=20260219">
+  <style>
+    .usage-container {
+      max-width: 900px;
+      margin: 24px auto;
+      padding: 0 24px;
+    }
+    .usage-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .usage-header h2 {
+      font-size: 20px;
+      font-weight: 600;
+    }
+    .month-picker {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .month-picker select, .month-picker input {
+      padding: 6px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 14px;
+    }
+    .usage-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .usage-table th, .usage-table td {
+      padding: 12px 16px;
+      text-align: right;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+    .usage-table th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: var(--text-secondary);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .usage-table th:first-child, .usage-table td:first-child {
+      text-align: left;
+    }
+    .usage-table tr:last-child td {
+      border-bottom: none;
+    }
+    .usage-table .total-row {
+      background: #f0f4ff;
+      font-weight: 600;
+    }
+    .usage-table .total-row td {
+      border-top: 2px solid var(--primary);
+    }
+    .cost-highlight {
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .no-data {
+      text-align: center;
+      padding: 48px;
+      color: var(--text-light);
+      font-size: 14px;
+    }
+    .jpy-note {
+      font-size: 12px;
+      color: var(--text-light);
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div style="display:flex;align-items:center;gap:24px;">
+      <h1>CS Dashboard</h1>
+      <nav class="header-nav">
+        <a href="/">メッセージ</a>
+        <a href="/templates">テンプレート管理</a>
+        <a href="/usage" class="active">AI利用コスト</a>
+        <a href="/manual">マニュアル</a>
+      </nav>
+    </div>
+  </div>
+
+  <div class="usage-container">
+    <div class="usage-header">
+      <h2>AI利用コスト集計</h2>
+      <div class="month-picker">
+        <select id="pick-year"></select>
+        <select id="pick-month"></select>
+        <button class="btn btn-primary btn-sm" onclick="loadUsage()">表示</button>
+      </div>
+    </div>
+
+    <div id="usage-content">
+      <div class="no-data">月を選択して「表示」をクリックしてください</div>
+    </div>
+  </div>
+
+  <script src="/static/js/usage.js?v=20260219"></script>
+</body>
+</html>

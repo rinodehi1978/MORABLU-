@@ -16,6 +16,9 @@ class AiResponseRead(BaseModel):
     is_sent: bool
     created_at: datetime
     sent_at: datetime | None = None
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+    model_used: str | None = None
 
     model_config = {"from_attributes": True}
 
