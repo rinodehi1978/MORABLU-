@@ -27,7 +27,7 @@ app = FastAPI(
 
 # --- Authentication Middleware ---
 # ログインページと認証APIはスキップ、それ以外はクッキー検証
-PUBLIC_PATHS = {"/login", "/api/auth/login", "/api/health/"}
+PUBLIC_PATHS = {"/login", "/api/auth/login", "/api/health", "/api/health/"}
 
 
 class AuthMiddleware(BaseHTTPMiddleware):
