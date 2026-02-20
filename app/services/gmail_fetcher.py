@@ -163,34 +163,81 @@ def _process_emails(
     account,
     direction: str,
 ) -> tuple[int, int]:
-    """メールリストを処理してDBに保存する"""
+    """メールリストを処理してDBに保存する
+
+    最適化: ヘッダー(Message-ID)だけ先に取得して重複チェックし、
+    新しいメールだけフルダウンロードすることで大幅に高速化。
+    """
+    if not msg_ids:
+        return 0, 0
+
+    # DB内の既存Message-IDを一括取得（高速な重複チェック用）
+    existing_ids = set(
+        row[0]
+        for row in db.query(Message.external_message_id)
+        .filter(
+            Message.account_id == account.id,
+            Message.external_message_id.isnot(None),
+        )
+        .all()
+    )
+
+    # Step 1: Message-IDヘッダーを一括取得して高速フィルタリング
+    # 一括fetchはIMAPラウンドトリップ1回で済むため大幅に高速
+    new_mids = []
+    try:
+        ids_csv = b",".join(msg_ids)
+        _, bulk_data = mail.fetch(ids_csv, "(BODY[HEADER.FIELDS (MESSAGE-ID)])")
+        # bulk_dataは [(b'1 ...', b'Message-ID: ...'), b')', ...] のフラット構造
+        idx = 0
+        for item in bulk_data:
+            if isinstance(item, tuple) and len(item) == 2:
+                seq_line = item[0]  # e.g. b'1 (BODY[HEADER.FIELDS ...'
+                hdr_raw = item[1]
+                # シーケンス番号をmsg_idsと対応付け
+                mid = msg_ids[idx] if idx < len(msg_ids) else None
+                idx += 1
+                if mid is None:
+                    continue
+                hdr_msg = email.message_from_bytes(hdr_raw)
+                msg_id = hdr_msg.get("Message-ID", "").strip()
+                if msg_id and msg_id in existing_ids:
+                    continue
+                new_mids.append((mid, msg_id))
+    except Exception:
+        logger.warning(
+            "%s %s: bulk header fetch failed, falling back to individual fetch",
+            account.name, direction,
+        )
+        new_mids = [(mid, "") for mid in msg_ids]
+
+    logger.info(
+        "%s %s: %d/%d emails are new (skipped %d duplicates)",
+        account.name, direction, len(new_mids), len(msg_ids),
+        len(msg_ids) - len(new_mids),
+    )
+
+    # Step 2: 新しいメールだけフルダウンロード＆処理
     fetched = 0
     new_count = 0
 
-    for mid in msg_ids:
+    for mid, pre_msg_id in new_mids:
         try:
             _, msg_data = mail.fetch(mid, "(RFC822)")
             raw = msg_data[0][1]
             msg = email.message_from_bytes(raw)
 
-            # 重複チェック（Gmail Message-IDで判定）
-            gmail_msg_id = msg.get("Message-ID", "").strip()
-            if gmail_msg_id:
-                exists = (
-                    db.query(Message)
-                    .filter(Message.external_message_id == gmail_msg_id)
-                    .first()
-                )
-                if exists:
-                    continue
-            else:
-                # Message-IDが空の場合: 送信者+件名+日付で重複チェック
+            gmail_msg_id = msg.get("Message-ID", "").strip() or pre_msg_id
+            if gmail_msg_id and gmail_msg_id in existing_ids:
+                continue
+
+            # Message-IDが空の場合: 送信者+件名+日付で重複チェック
+            if not gmail_msg_id:
                 date_str = msg.get("Date", "")
                 try:
                     msg_date = parsedate_to_datetime(date_str)
                 except Exception:
                     msg_date = None
-                from_raw = _decode_header(msg.get("From", ""))
                 subj_raw = _decode_header(msg.get("Subject", ""))
                 dup_query = db.query(Message).filter(
                     Message.account_id == account.id,
@@ -228,7 +275,6 @@ def _process_emails(
                     received_at=parsed["date"],
                 )
             else:
-                # 送信済みメール（返信ログ）
                 parsed = _parse_sent_email(msg)
                 if not parsed:
                     continue
@@ -248,6 +294,8 @@ def _process_emails(
 
             db.add(new_msg)
             new_count += 1
+            if gmail_msg_id:
+                existing_ids.add(gmail_msg_id)
 
         except Exception:
             logger.exception("Failed to parse email %s (direction=%s)", mid, direction)
