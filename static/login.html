@@ -80,7 +80,25 @@
       display: none;
     }
     .error-msg.show { display: block; }
+    .dev-banner { background: #e65100; color: #fff; text-align: center; padding: 6px; font-size: 12px; font-weight: 700; letter-spacing: 1px; position: fixed; top: 0; left: 0; right: 0; z-index: 100; }
+    .login-card .dev-title { color: #e65100; }
   </style>
+  <script>
+  (function() {
+    var h = location.hostname;
+    if (h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0') {
+      document.title = '[DEV] ' + document.title;
+      document.addEventListener('DOMContentLoaded', function() {
+        var banner = document.createElement('div');
+        banner.className = 'dev-banner';
+        banner.textContent = 'DEV ENVIRONMENT';
+        document.body.prepend(banner);
+        var h1 = document.querySelector('.login-card h1');
+        if (h1) h1.classList.add('dev-title');
+      });
+    }
+  })();
+  </script>
 </head>
 <body>
   <div class="login-card">

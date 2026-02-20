@@ -136,10 +136,46 @@ def _migrate_db():
                     logger.info("Added column ai_responses.%s", col)
 
 
+def _seed_templates():
+    """qa_templatesが空の場合、templates_export.jsonから自動投入する"""
+    import json
+
+    from app.database import SessionLocal
+    from app.models.qa_template import QaTemplate
+
+    db = SessionLocal()
+    try:
+        if db.query(QaTemplate).count() > 0:
+            return
+
+        json_path = Path(__file__).parent.parent / "data" / "templates_export.json"
+        if not json_path.exists():
+            logger.warning("templates_export.json not found — skipping template seed")
+            return
+
+        with open(json_path, encoding="utf-8") as f:
+            records = json.load(f)
+
+        for r in records:
+            db.add(QaTemplate(
+                category_key=r.get("category_key", "other"),
+                category=r["category"],
+                subcategory=r.get("subcategory"),
+                platform=r.get("platform", "common"),
+                answer_template=r["answer_template"],
+                staff_notes=r.get("staff_notes"),
+            ))
+        db.commit()
+        logger.info("Seeded %d Q&A templates from templates_export.json", len(records))
+    finally:
+        db.close()
+
+
 @app.on_event("startup")
 async def startup():
     Base.metadata.create_all(bind=engine)
     _migrate_db()
+    _seed_templates()
     start_scheduler()
 
 
