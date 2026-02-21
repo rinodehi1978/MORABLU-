@@ -7,6 +7,7 @@
 4. 重複チェック（external_message_id）してDBに保存
 """
 
+import hashlib
 import imaplib
 import email
 import logging
@@ -228,31 +229,17 @@ def _process_emails(
             msg = email.message_from_bytes(raw)
 
             gmail_msg_id = msg.get("Message-ID", "").strip() or pre_msg_id
-            if gmail_msg_id and gmail_msg_id in existing_ids:
-                continue
 
-            # Message-IDが空の場合: 送信者+件名+日付で重複チェック
+            # Message-IDが空の場合: 送信者+件名+日付からハッシュIDを生成
             if not gmail_msg_id:
-                date_str = msg.get("Date", "")
-                try:
-                    msg_date = parsedate_to_datetime(date_str)
-                except Exception:
-                    msg_date = None
-                subj_raw = _decode_header(msg.get("Subject", ""))
-                dup_query = db.query(Message).filter(
-                    Message.account_id == account.id,
-                    Message.external_message_id.is_(None),
-                )
-                if msg_date:
-                    dup_query = dup_query.filter(
-                        Message.received_at == msg_date,
-                    )
-                if subj_raw:
-                    dup_query = dup_query.filter(
-                        Message.subject == subj_raw,
-                    )
-                if dup_query.first():
-                    continue
+                from_addr = msg.get("From", "")
+                subj_hdr = msg.get("Subject", "")
+                date_hdr = msg.get("Date", "")
+                combined = f"{account.id}:{from_addr}:{subj_hdr}:{date_hdr}"
+                gmail_msg_id = f"gen_{hashlib.sha256(combined.encode()).hexdigest()[:32]}"
+
+            if gmail_msg_id in existing_ids:
+                continue
 
             if direction == "inbound":
                 parsed = _parse_amazon_email(msg)
@@ -263,7 +250,7 @@ def _process_emails(
                 new_msg = Message(
                     account_id=account.id,
                     external_order_id=parsed["order_id"],
-                    external_message_id=gmail_msg_id or None,
+                    external_message_id=gmail_msg_id,
                     sender=parsed["sender"],
                     subject=parsed["subject"],
                     body=parsed["message"],
@@ -283,7 +270,7 @@ def _process_emails(
                 new_msg = Message(
                     account_id=account.id,
                     external_order_id=parsed["order_id"],
-                    external_message_id=gmail_msg_id or None,
+                    external_message_id=gmail_msg_id,
                     sender=account.name,
                     subject=parsed["subject"],
                     body=parsed["message"],
@@ -294,8 +281,7 @@ def _process_emails(
 
             db.add(new_msg)
             new_count += 1
-            if gmail_msg_id:
-                existing_ids.add(gmail_msg_id)
+            existing_ids.add(gmail_msg_id)
 
         except Exception:
             logger.exception("Failed to parse email %s (direction=%s)", mid, direction)
