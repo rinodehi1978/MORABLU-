@@ -348,7 +348,7 @@ def _parse_amazon_email(msg: email.message.Message) -> dict | None:
 
     # Reply-Toアドレス（Amazon暗号化エイリアス: xxx@marketplace.amazon.co.jp）
     reply_to_raw = _decode_header(msg.get("Reply-To", ""))
-    reply_to_match = re.search(r"[\w.+-]+@marketplace\.amazon\.\w+", reply_to_raw)
+    reply_to_match = re.search(r"[\w.+-]+@marketplace\.amazon\.[\w.]+", reply_to_raw)
     reply_to_address = reply_to_match.group(0) if reply_to_match else None
 
     return {

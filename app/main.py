@@ -171,10 +171,24 @@ def _seed_templates():
         db.close()
 
 
+def _fix_truncated_reply_addresses():
+    """reply_to_addressが.amazon.coで切れているレコードを.amazon.co.jpに修正する"""
+    from sqlalchemy import text
+
+    with engine.begin() as conn:
+        result = conn.execute(text(
+            "UPDATE messages SET reply_to_address = reply_to_address || '.jp'"
+            " WHERE reply_to_address LIKE '%@marketplace.amazon.co'"
+        ))
+        if result.rowcount:
+            logger.info("Fixed %d truncated reply_to_address records", result.rowcount)
+
+
 @app.on_event("startup")
 async def startup():
     Base.metadata.create_all(bind=engine)
     _migrate_db()
+    _fix_truncated_reply_addresses()
     _seed_templates()
     start_scheduler()
 
